@@ -2,7 +2,9 @@ import axios, { type InternalAxiosRequestConfig, type AxiosResponse } from 'axio
 import * as SecureStore from 'expo-secure-store';
 import { useAuthStore } from '@/store/useAuthStore';
 
-export const BASE_URL = 'https://ticketingjtl.vercel.app/api/mobile';
+// Use EXPO_PUBLIC_API_URL env-var for dev/staging, fall back to production
+export const BASE_URL =
+    process.env.EXPO_PUBLIC_API_URL ?? 'https://ticketingjtl.vercel.app/api/mobile';
 
 export const api = axios.create({
     baseURL: BASE_URL,
@@ -62,6 +64,7 @@ export const portalApi = {
 export const commentsApi = {
     list: (ticketId: string) => api.get('/comments', { params: { ticket_id: ticketId } }),
     create: (data: unknown) => api.post('/comments', data),
+    delete: (id: string) => api.delete(`/comments/${id}`),
 };
 
 // ── Activity ──────────────────────────────────────────────────────────────────

@@ -94,6 +94,54 @@ export interface KbArticle {
     updated_at: string;
 }
 
+// ── Shared inline types — now exported for reuse ────────────────────────────
+
+export interface StaffUser {
+    id: string;
+    name: string | null;
+    email: string | null;
+    role?: UserRole;
+}
+
+export interface ActivityEntry {
+    id: string;
+    action: string;
+    field: string | null;
+    old_value: string | null;
+    new_value: string | null;
+    user_name: string;
+    created_at: string;
+}
+
+export interface DashboardStats {
+    tickets: {
+        total: number;
+        open: number;
+        in_progress: number;
+        resolved: number;
+        closed: number;
+        today: number;
+        this_week: number;
+        critical: number;
+        overdue: number;
+    };
+    tasks: {
+        total: number;
+        completed: number;
+        pending: number;
+        urgent: number;
+    };
+    machines: {
+        total: number;
+        pending: number;
+        approved: number;
+        fulfilled: number;
+        rejected: number;
+    };
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+
 export interface MachineRequest {
     id: string;
     number: number;

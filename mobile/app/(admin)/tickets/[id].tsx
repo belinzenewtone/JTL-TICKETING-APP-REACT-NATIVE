@@ -11,10 +11,7 @@ import { ArrowLeft, Send, Lock, Globe, Trash2, UserCheck, Activity } from 'lucid
 import { ticketsApi, commentsApi, staffApi, activityApi } from '@/api/client';
 import { StatusBadge, PriorityBadge } from '@/components/StatusBadge';
 import { useAuthStore } from '@/store/useAuthStore';
-import type { Ticket, TicketComment, TicketStatus } from '@/types/database';
-
-interface StaffUser { id: string; name: string | null; email: string | null; }
-interface ActivityEntry { id: string; action: string; field: string | null; old_value: string | null; new_value: string | null; user_name: string; created_at: string; }
+import type { Ticket, TicketComment, TicketStatus, StaffUser, ActivityEntry } from '@/types/database';
 
 const STATUSES: TicketStatus[] = ['open', 'in-progress', 'resolved', 'closed'];
 
@@ -177,7 +174,9 @@ export default function TicketDetailScreen() {
                         Comments ({comments.filter((c: TicketComment) => !c.is_internal || user?.role !== 'USER').length})
                     </Text>
 
-                    {comments.map((c: TicketComment) => (
+                    {comments
+                        .filter((c: TicketComment) => !c.is_internal || user?.role !== 'USER')
+                        .map((c: TicketComment) => (
                         <View key={c.id} style={[styles.commentCard, c.is_internal && styles.internalComment]}>
                             <View style={styles.commentHeader}>
                                 <View style={styles.commentAuthorRow}>
@@ -188,7 +187,8 @@ export default function TicketDetailScreen() {
                             </View>
                             <Text style={styles.commentContent}>{c.content}</Text>
                         </View>
-                    ))}
+                    ))
+                    }
 
                     {/* Add comment */}
                     <View style={styles.commentForm}>

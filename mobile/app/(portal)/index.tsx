@@ -6,40 +6,58 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FAB, Modal, Portal, Button, Divider, TextInput as PaperInput } from 'react-native-paper';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react-native';
+import { Plus, ChevronRight } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { portalApi } from '@/api/client';
 import { StatusBadge, PriorityBadge } from '@/components/StatusBadge';
 import { EmptyState } from '@/components/EmptyState';
 import { useAuthStore } from '@/store/useAuthStore';
 import type { Ticket, TicketCategory } from '@/types/database';
 
+const CATEGORY_LABELS: Record<string, string> = {
+    'email': 'Email',
+    'account-login': 'Account / Login',
+    'password-reset': 'Password Reset',
+    'hardware': 'Hardware',
+    'software': 'Software',
+    'network-vpn': 'Network / VPN',
+    'other': 'Other',
+};
+
 const CATEGORIES: TicketCategory[] = ['email', 'account-login', 'password-reset', 'hardware', 'software', 'network-vpn', 'other'];
 
-function TicketItem({ ticket }: { ticket: Ticket }) {
+function TicketItem({ ticket, onPress }: { ticket: Ticket; onPress: () => void }) {
     return (
-        <View style={styles.ticketCard}>
+        <TouchableOpacity style={styles.ticketCard} onPress={onPress} activeOpacity={0.75}>
             <View style={styles.ticketHeader}>
                 <Text style={styles.ticketNum}>#{ticket.number}</Text>
-                <View style={{ flexDirection: 'row', gap: 6 }}>
+                <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
                     <StatusBadge status={ticket.status} />
                     <PriorityBadge priority={ticket.priority} />
+                    <ChevronRight size={14} color="#9ca3af" />
                 </View>
             </View>
             <Text style={styles.ticketSubject} numberOfLines={2}>{ticket.subject}</Text>
+            {ticket.category && (
+                <Text style={styles.ticketCategory}>
+                    {CATEGORY_LABELS[ticket.category] ?? ticket.category}
+                </Text>
+            )}
             <Text style={styles.ticketDate}>
                 {new Date(ticket.ticket_date).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}
             </Text>
             {ticket.resolution_notes ? (
                 <View style={styles.resolutionBox}>
-                    <Text style={styles.resolutionLabel}>Resolution</Text>
-                    <Text style={styles.resolutionText} numberOfLines={3}>{ticket.resolution_notes}</Text>
+                    <Text style={styles.resolutionLabel}>✓ Resolution</Text>
+                    <Text style={styles.resolutionText} numberOfLines={2}>{ticket.resolution_notes}</Text>
                 </View>
             ) : null}
-        </View>
+        </TouchableOpacity>
     );
 }
 
 export default function PortalScreen() {
+    const router = useRouter();
     const queryClient = useQueryClient();
     const { user } = useAuthStore();
     const [createVisible, setCreateVisible] = useState(false);
@@ -101,7 +119,9 @@ export default function PortalScreen() {
             <FlatList
                 data={tickets}
                 keyExtractor={t => t.id}
-                renderItem={({ item }) => <TicketItem ticket={item} />}
+                renderItem={({ item }) => (
+                    <TicketItem ticket={item} onPress={() => router.push(`/(portal)/tickets/${item.id}`)} />
+                )}
                 contentContainerStyle={tickets.length === 0 ? { flex: 1 } : { paddingBottom: 100 }}
                 ListEmptyComponent={
                     <EmptyState
@@ -179,6 +199,7 @@ const styles = StyleSheet.create({
     ticketHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
     ticketNum: { fontSize: 12, fontWeight: '700', color: '#059669' },
     ticketSubject: { fontSize: 15, fontWeight: '600', color: '#111827', marginBottom: 4 },
+    ticketCategory: { fontSize: 12, color: '#6b7280', marginBottom: 3 },
     ticketDate: { fontSize: 12, color: '#9ca3af', marginBottom: 4 },
     resolutionBox: { backgroundColor: '#f0fdf4', borderRadius: 8, padding: 10, marginTop: 8 },
     resolutionLabel: { fontSize: 11, fontWeight: '600', color: '#059669', marginBottom: 4, textTransform: 'uppercase' },
