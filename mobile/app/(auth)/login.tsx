@@ -44,8 +44,11 @@ export default function LoginScreen() {
             });
             router.replace('/');
         } catch (e: any) {
-            const msg = e?.response?.data?.error ?? 'Login failed. Please try again.';
-            setError(msg);
+            const raw = e?.response?.data?.error ?? e?.response?.data;
+            const msg = typeof raw === 'string'
+                ? raw
+                : raw?.message ?? e?.message ?? 'Login failed. Please try again.';
+            setError(String(msg));
         } finally {
             setLoading(false);
         }
