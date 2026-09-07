@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Divider, TextInput as PaperInput, ActivityIndicator } from 'react-native-paper';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Send, MessageSquare, CheckCircle2, Clock, AlertCircle } from 'lucide-react-native';
+import { ArrowLeft, Send, MessageSquare, CircleCheckBig, Clock, CircleAlert } from 'lucide-react-native';
 import { ticketsApi, commentsApi } from '@/api/client';
 import { StatusBadge, PriorityBadge } from '@/components/StatusBadge';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -36,10 +36,10 @@ function formatShortDate(s: string) {
 }
 
 const STATUS_ICON: Record<string, React.ReactNode> = {
-    open:        <AlertCircle size={15} color="#1d4ed8" />,
+    open:        <CircleAlert size={15} color="#1d4ed8" />,
     'in-progress': <Clock size={15} color="#b45309" />,
-    resolved:    <CheckCircle2 size={15} color="#059669" />,
-    closed:      <CheckCircle2 size={15} color="#6b7280" />,
+    resolved:    <CircleCheckBig size={15} color="#059669" />,
+    closed:      <CircleCheckBig size={15} color="#6b7280" />,
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -155,7 +155,7 @@ export default function PortalTicketDetailScreen() {
                     {ticket.resolution_notes ? (
                         <View style={styles.resolutionCard}>
                             <View style={styles.resolutionHeader}>
-                                <CheckCircle2 size={16} color="#059669" />
+                                <CircleCheckBig size={16} color="#059669" />
                                 <Text style={styles.resolutionTitle}>IT Resolution</Text>
                             </View>
                             <Text style={styles.resolutionText}>{ticket.resolution_notes}</Text>
@@ -236,7 +236,7 @@ export default function PortalTicketDetailScreen() {
                     </View>
                 ) : (
                     <View style={styles.closedBar}>
-                        <CheckCircle2 size={15} color="#059669" />
+                        <CircleCheckBig size={15} color="#059669" />
                         <Text style={styles.closedBarText}>This ticket is {ticket.status}. No further replies needed.</Text>
                     </View>
                 )}

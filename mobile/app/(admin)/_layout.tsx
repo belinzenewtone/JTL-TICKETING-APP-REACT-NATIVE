@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Ticket, CheckSquare, Grid, User } from 'lucide-react-native';
+import { Ticket, SquareCheck, Grid, User } from 'lucide-react-native';
 import { useQuery } from '@tanstack/react-query';
 import { dashboardApi } from '@/api/client';
 
@@ -38,7 +38,7 @@ export default function AdminLayout() {
                 name="tickets"
                 options={{
                     title: 'Tickets',
-                    tabBarIcon: ({ color, size }: { color: string; size: number }) => <Ticket size={size} color={color} />,
+                    tabBarIcon: ({ color, size }: { color: string | any; size: number }) => <Ticket size={size} color={color} />,
                     tabBarBadge: openTickets > 0 ? openTickets : undefined,
                     tabBarBadgeStyle: { backgroundColor: '#059669', fontSize: 10 },
                 }}
@@ -47,7 +47,7 @@ export default function AdminLayout() {
                 name="tasks"
                 options={{
                     title: 'Tasks',
-                    tabBarIcon: ({ color, size }: { color: string; size: number }) => <CheckSquare size={size} color={color} />,
+                    tabBarIcon: ({ color, size }: { color: string | any; size: number }) => <SquareCheck size={size} color={color} />,
                     tabBarBadge: pendingTasks > 0 ? pendingTasks : undefined,
                     tabBarBadgeStyle: { backgroundColor: '#b45309', fontSize: 10 },
                 }}
@@ -56,14 +56,14 @@ export default function AdminLayout() {
                 name="more"
                 options={{
                     title: 'More',
-                    tabBarIcon: ({ color, size }: { color: string; size: number }) => <Grid size={size} color={color} />,
+                    tabBarIcon: ({ color, size }: { color: string | any; size: number }) => <Grid size={size} color={color} />,
                 }}
             />
             <Tabs.Screen
                 name="profile"
                 options={{
                     title: 'Profile',
-                    tabBarIcon: ({ color, size }: { color: string; size: number }) => <User size={size} color={color} />,
+                    tabBarIcon: ({ color, size }: { color: string | any; size: number }) => <User size={size} color={color} />,
                 }}
             />
         </Tabs>

@@ -8,12 +8,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic', // support light + dark mode
-    newArchEnabled: true,
-    splash: {
-        image: './assets/splash.png',
-        resizeMode: 'contain',
-        backgroundColor: '#ffffff',
-    },
+    // newArchEnabled is the permanent default in SDK 57 — field removed from ExpoConfig type
+    // splash is now configured via expo-splash-screen plugin below (removed from top-level in SDK 57)
     android: {
         adaptiveIcon: {
             foregroundImage: './assets/adaptive-icon.png',

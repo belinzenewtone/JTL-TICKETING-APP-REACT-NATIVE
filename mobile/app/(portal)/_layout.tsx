@@ -26,7 +26,7 @@ export default function PortalLayout() {
                 options={{
                     title: 'My Tickets',
                     tabBarLabel: 'Tickets',
-                    tabBarIcon: ({ color, size }: { color: string; size: number }) => <Ticket size={size} color={color} />,
+                    tabBarIcon: ({ color, size }: { color: string | any; size: number }) => <Ticket size={size} color={color} />,
                 }}
             />
             <Tabs.Screen
@@ -34,7 +34,7 @@ export default function PortalLayout() {
                 options={{
                     title: 'Profile',
                     tabBarLabel: 'Profile',
-                    tabBarIcon: ({ color, size }: { color: string; size: number }) => <User size={size} color={color} />,
+                    tabBarIcon: ({ color, size }: { color: string | any; size: number }) => <User size={size} color={color} />,
                 }}
             />
         </Tabs>
