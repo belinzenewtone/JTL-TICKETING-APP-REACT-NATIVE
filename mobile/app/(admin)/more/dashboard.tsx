@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
@@ -22,7 +22,7 @@ function MetricRow({ label, value, total, color }: { label: string; value: numbe
 
 export default function DashboardScreen() {
     const router = useRouter();
-    const { data: stats, isLoading } = useQuery({
+    const { data: stats, isLoading, refetch, isRefetching } = useQuery({
         queryKey: ['dashboard'],
         queryFn: () => dashboardApi.stats().then(r => r.data as any),
         staleTime: 60_000,
@@ -40,7 +40,10 @@ export default function DashboardScreen() {
             {isLoading || !stats ? (
                 <View style={styles.loading}><Text style={styles.loadingText}>Loading stats…</Text></View>
             ) : (
-                <ScrollView contentContainerStyle={styles.scroll}>
+                <ScrollView
+                    contentContainerStyle={styles.scroll}
+                    refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#059669" />}
+                >
 
                     {/* Tickets */}
                     <View style={styles.section}>

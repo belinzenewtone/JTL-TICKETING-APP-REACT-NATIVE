@@ -13,7 +13,7 @@ interface Props {
 export function TaskCard({ task, onToggle, onDelete }: Props) {
     return (
         <View style={[styles.card, task.completed && styles.completedCard]}>
-            <Checkbox.Android
+            <Checkbox
                 status={task.completed ? 'checked' : 'unchecked'}
                 onPress={onToggle}
                 color="#059669"

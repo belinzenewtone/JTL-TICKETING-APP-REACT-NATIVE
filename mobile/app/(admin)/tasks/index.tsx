@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import {
     View, Text, StyleSheet, FlatList,
-    TouchableOpacity, RefreshControl,
+    TouchableOpacity, TextInput, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FAB, Modal, Portal, Button, Divider, TextInput as PaperInput } from 'react-native-paper';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react-native';
+import { Plus, Search, X } from 'lucide-react-native';
 import { tasksApi } from '@/api/client';
 import { TaskCard } from '@/components/TaskCard';
 import { EmptyState } from '@/components/EmptyState';
+import { DatePickerField } from '@/components/DatePickerField';
 import { useAppStore } from '@/store/useAppStore';
 import type { Task, ImportanceLevel } from '@/types/database';
 
@@ -17,7 +18,7 @@ const IMPORTANCES: ImportanceLevel[] = ['urgent', 'important', 'neutral'];
 
 export default function TasksScreen() {
     const queryClient = useQueryClient();
-    const { taskFilter, taskImportance, setTaskFilter, setTaskImportance } = useAppStore();
+    const { taskFilter, taskImportance, taskSearch, setTaskFilter, setTaskImportance, setTaskSearch } = useAppStore();
     const [createVisible, setCreateVisible] = useState(false);
     const [newText, setNewText] = useState('');
     const [newImportance, setNewImportance] = useState<ImportanceLevel>('neutral');
@@ -27,6 +28,7 @@ export default function TasksScreen() {
     if (taskFilter === 'completed') params.completed = 'true';
     if (taskFilter === 'pending') params.completed = 'false';
     if (taskImportance !== 'all') params.importance = taskImportance;
+    if (taskSearch.trim()) params.search = taskSearch.trim();
 
     const { data: tasks = [], isLoading, refetch, isRefetching } = useQuery({
         queryKey: ['tasks', params],
@@ -72,6 +74,24 @@ export default function TasksScreen() {
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>My Tasks</Text>
                 <Text style={styles.headerSub}>{pending} pending</Text>
+            </View>
+
+            {/* Search bar */}
+            <View style={styles.searchRow}>
+                <Search size={16} color="#9ca3af" style={{ marginRight: 8 }} />
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search tasks…"
+                    placeholderTextColor="#9ca3af"
+                    value={taskSearch}
+                    onChangeText={setTaskSearch}
+                    returnKeyType="search"
+                />
+                {taskSearch ? (
+                    <TouchableOpacity onPress={() => setTaskSearch('')}>
+                        <X size={16} color="#9ca3af" />
+                    </TouchableOpacity>
+                ) : null}
             </View>
 
             {/* Filter chips */}
@@ -127,14 +147,11 @@ export default function TasksScreen() {
                         outlineColor="#d1d5db"
                         activeOutlineColor="#059669"
                     />
-                    <PaperInput
-                        label="Due date (YYYY-MM-DD)"
+
+                    <DatePickerField
+                        label="Due date"
                         value={newDate}
-                        onChangeText={setNewDate}
-                        mode="outlined"
-                        style={styles.formInput}
-                        outlineColor="#d1d5db"
-                        activeOutlineColor="#059669"
+                        onChangeDate={setNewDate}
                     />
 
                     <Text style={styles.filterLabel}>Importance</Text>
@@ -157,9 +174,11 @@ export default function TasksScreen() {
 
 const styles = StyleSheet.create({
     root: { flex: 1, backgroundColor: '#f8fafc' },
-    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 },
+    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 10 },
     headerTitle: { fontSize: 26, fontWeight: '800', color: '#111827' },
     headerSub: { fontSize: 14, color: '#059669', fontWeight: '600' },
+    searchRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', marginHorizontal: 16, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 1 },
+    searchInput: { flex: 1, fontSize: 15, color: '#111827' },
     filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingHorizontal: 16, marginBottom: 12 },
     dividerV: { width: 1, height: 24, backgroundColor: '#e5e7eb', marginHorizontal: 4, alignSelf: 'center' },
     chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: '#f3f4f6', borderWidth: 1, borderColor: '#e5e7eb' },
@@ -170,6 +189,6 @@ const styles = StyleSheet.create({
     fab: { position: 'absolute', bottom: 24, right: 20, backgroundColor: '#059669' },
     modal: { backgroundColor: '#fff', margin: 20, borderRadius: 20, padding: 24 },
     modalTitle: { fontSize: 20, fontWeight: '700', color: '#111827', marginBottom: 12 },
-    filterLabel: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8, marginTop: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
+    filterLabel: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
     formInput: { marginBottom: 10, backgroundColor: '#f9fafb' },
 });

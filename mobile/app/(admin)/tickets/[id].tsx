@@ -34,6 +34,8 @@ export default function TicketDetailScreen() {
     const [isInternal, setIsInternal] = useState(false);
     const [staffPickerVisible, setStaffPickerVisible] = useState(false);
     const [showActivity, setShowActivity] = useState(false);
+    const [editingNotes, setEditingNotes] = useState(false);
+    const [notesValue, setNotesValue] = useState('');
 
     const { data: ticket, isLoading } = useQuery({
         queryKey: ['ticket', id],
@@ -161,7 +163,58 @@ export default function TicketDetailScreen() {
                             </>
                         )}
 
-                        {ticket.resolution_notes ? (
+                        {/* Resolution notes — editable for non-USER */}
+                        {user?.role !== 'USER' && (
+                            <>
+                                <View style={styles.resolutionHeader}>
+                                    <Text style={styles.sectionLabel}>Resolution Notes</Text>
+                                    {!editingNotes && (
+                                        <TouchableOpacity
+                                            onPress={() => { setNotesValue(ticket.resolution_notes ?? ''); setEditingNotes(true); }}
+                                            hitSlop={8}
+                                        >
+                                            <Text style={styles.editLink}>{ticket.resolution_notes ? 'Edit' : '+ Add'}</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                                {editingNotes ? (
+                                    <View style={{ marginBottom: 8 }}>
+                                        <PaperInput
+                                            value={notesValue}
+                                            onChangeText={setNotesValue}
+                                            mode="outlined"
+                                            multiline
+                                            numberOfLines={4}
+                                            placeholder="Enter resolution notes…"
+                                            style={{ backgroundColor: '#f9fafb', marginBottom: 8 }}
+                                            outlineColor="#d1d5db"
+                                            activeOutlineColor="#059669"
+                                        />
+                                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                                            <Button mode="outlined" onPress={() => setEditingNotes(false)} style={{ flex: 1 }}>Cancel</Button>
+                                            <Button
+                                                mode="contained"
+                                                buttonColor="#059669"
+                                                loading={updateMutation.isPending}
+                                                onPress={() => {
+                                                    updateMutation.mutate({ resolution_notes: notesValue });
+                                                    setEditingNotes(false);
+                                                }}
+                                                style={{ flex: 1 }}
+                                            >
+                                                Save
+                                            </Button>
+                                        </View>
+                                    </View>
+                                ) : ticket.resolution_notes ? (
+                                    <Text style={styles.resolutionText}>{ticket.resolution_notes}</Text>
+                                ) : (
+                                    <Text style={styles.resolutionEmpty}>No resolution notes yet.</Text>
+                                )}
+                            </>
+                        )}
+                        {/* USER role: read-only */}
+                        {user?.role === 'USER' && ticket.resolution_notes ? (
                             <>
                                 <Text style={styles.sectionLabel}>Resolution Notes</Text>
                                 <Text style={styles.resolutionText}>{ticket.resolution_notes}</Text>
@@ -311,7 +364,10 @@ const styles = StyleSheet.create({
     chipTextActive: { color: '#059669', fontWeight: '600' },
     assignRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#f9fafb', borderRadius: 10, padding: 10, marginBottom: 12 },
     assignText: { fontSize: 14, color: '#374151' },
-    resolutionText: { fontSize: 14, color: '#374151', lineHeight: 21 },
+    resolutionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+    editLink: { fontSize: 13, color: '#059669', fontWeight: '600' },
+    resolutionText: { fontSize: 14, color: '#374151', lineHeight: 21, marginBottom: 8 },
+    resolutionEmpty: { fontSize: 14, color: '#9ca3af', fontStyle: 'italic', marginBottom: 8 },
     commentsTitle: { fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 10 },
     commentCard: { backgroundColor: '#fff', borderRadius: 12, padding: 12, marginBottom: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
     internalComment: { backgroundColor: '#fffbeb', borderLeftWidth: 3, borderLeftColor: '#f59e0b' },

@@ -1,8 +1,20 @@
 import { Tabs } from 'expo-router';
 import { Ticket, CheckSquare, Grid, User } from 'lucide-react-native';
+import { useQuery } from '@tanstack/react-query';
+import { dashboardApi } from '@/api/client';
 
 // Logout now lives in the Profile tab — no header button needed
 export default function AdminLayout() {
+    // Fetch dashboard stats for badge counts (stale after 60s, silent background refetch)
+    const { data: stats } = useQuery({
+        queryKey: ['dashboard'],
+        queryFn: () => dashboardApi.stats().then(r => r.data as any),
+        staleTime: 60_000,
+    });
+
+    const openTickets: number = stats?.tickets?.open ?? 0;
+    const pendingTasks: number = stats?.tasks?.pending ?? 0;
+
     return (
         <Tabs
             screenOptions={{
@@ -27,6 +39,8 @@ export default function AdminLayout() {
                 options={{
                     title: 'Tickets',
                     tabBarIcon: ({ color, size }: { color: string; size: number }) => <Ticket size={size} color={color} />,
+                    tabBarBadge: openTickets > 0 ? openTickets : undefined,
+                    tabBarBadgeStyle: { backgroundColor: '#059669', fontSize: 10 },
                 }}
             />
             <Tabs.Screen
@@ -34,6 +48,8 @@ export default function AdminLayout() {
                 options={{
                     title: 'Tasks',
                     tabBarIcon: ({ color, size }: { color: string; size: number }) => <CheckSquare size={size} color={color} />,
+                    tabBarBadge: pendingTasks > 0 ? pendingTasks : undefined,
+                    tabBarBadgeStyle: { backgroundColor: '#b45309', fontSize: 10 },
                 }}
             />
             <Tabs.Screen
