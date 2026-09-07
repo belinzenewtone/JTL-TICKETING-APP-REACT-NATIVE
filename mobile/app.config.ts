@@ -35,6 +35,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     extra: {
         // Set EXPO_PUBLIC_API_URL in .env to override (e.g. for staging/dev)
-        apiUrl: process.env.EXPO_PUBLIC_API_URL ?? 'https://ticketingjtl.vercel.app/api/mobile',
+        apiUrl: process.env.EXPO_PUBLIC_API_URL ?? 'https://ticketing-system-belinzenewtones-projects.vercel.app/api/mobile',
     },
 });
