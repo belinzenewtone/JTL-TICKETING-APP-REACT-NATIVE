@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import {
     View, Text, StyleSheet, FlatList,
-    TextInput, TouchableOpacity, RefreshControl,
+    TextInput, TouchableOpacity, RefreshControl, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FAB, Modal, Portal, Button, Divider, TextInput as PaperInput } from 'react-native-paper';
@@ -158,27 +158,31 @@ export default function TicketsScreen() {
                 </Modal>
 
                 {/* Create Ticket Modal */}
-                <Modal visible={createVisible} onDismiss={() => setCreateVisible(false)} contentContainerStyle={styles.modal}>
+                <Modal visible={createVisible} onDismiss={() => setCreateVisible(false)} contentContainerStyle={[styles.modal, { maxHeight: '90%' }]}>
                     <Text style={styles.modalTitle}>New Ticket</Text>
                     <Divider style={{ marginBottom: 16 }} />
 
-                    <PaperInput label="Employee Name" value={form.employee_name ?? ''} onChangeText={(v: string) => setForm(f => ({ ...f, employee_name: v }))} mode="outlined" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
-                    <PaperInput label="Department" value={form.department ?? ''} onChangeText={(v: string) => setForm(f => ({ ...f, department: v }))} mode="outlined" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
-                    <PaperInput label="Subject" value={form.subject ?? ''} onChangeText={(v: string) => setForm(f => ({ ...f, subject: v }))} mode="outlined" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
-                    <PaperInput label="Description" value={form.description ?? ''} onChangeText={(v: string) => setForm(f => ({ ...f, description: v }))} mode="outlined" multiline numberOfLines={3} style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
+                    <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                        <PaperInput label="Employee Name" value={form.employee_name ?? ''} onChangeText={(v: string) => setForm(f => ({ ...f, employee_name: v }))} mode="outlined" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
+                        <PaperInput label="Department" value={form.department ?? ''} onChangeText={(v: string) => setForm(f => ({ ...f, department: v }))} mode="outlined" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
+                        <PaperInput label="Subject" value={form.subject ?? ''} onChangeText={(v: string) => setForm(f => ({ ...f, subject: v }))} mode="outlined" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
+                        <PaperInput label="Description" value={form.description ?? ''} onChangeText={(v: string) => setForm(f => ({ ...f, description: v }))} mode="outlined" multiline numberOfLines={3} style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
 
-                    <Text style={styles.filterLabel}>Priority</Text>
-                    <View style={styles.chipRow}>
-                        {PRIORITIES.map(p => (
-                            <TouchableOpacity key={p} style={[styles.chip, form.priority === p && styles.chipActive]} onPress={() => setForm(f => ({ ...f, priority: p }))}>
-                                <Text style={[styles.chipText, form.priority === p && styles.chipTextActive]}>{p}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
+                        <Text style={styles.filterLabel}>Priority</Text>
+                        <View style={styles.chipRow}>
+                            {PRIORITIES.map(p => (
+                                <TouchableOpacity key={p} style={[styles.chip, form.priority === p && styles.chipActive]} onPress={() => setForm(f => ({ ...f, priority: p }))}>
+                                    <Text style={[styles.chipText, form.priority === p && styles.chipTextActive]}>
+                                        {p.charAt(0).toUpperCase() + p.slice(1)}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
 
-                    <Button mode="contained" buttonColor="#059669" loading={createMutation.isPending} onPress={handleCreate} style={{ marginTop: 12 }}>
-                        Create Ticket
-                    </Button>
+                        <Button mode="contained" buttonColor="#059669" loading={createMutation.isPending} onPress={handleCreate} style={{ marginTop: 12, marginBottom: 4 }}>
+                            Create Ticket
+                        </Button>
+                    </ScrollView>
                 </Modal>
             </Portal>
         </SafeAreaView>

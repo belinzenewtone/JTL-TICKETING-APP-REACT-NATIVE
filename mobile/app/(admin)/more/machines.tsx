@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
     View, Text, StyleSheet, FlatList,
-    TouchableOpacity, RefreshControl, Alert,
+    TouchableOpacity, RefreshControl, Alert, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FAB, Modal, Portal, Button, Divider, TextInput as PaperInput } from 'react-native-paper';
@@ -16,11 +16,17 @@ const STATUSES: MachineStatus[] = ['pending', 'approved', 'fulfilled', 'rejected
 const REASONS: MachineReason[] = ['old-hardware', 'faulty', 'new-user'];
 const IMPORTANCE: ImportanceLevel[] = ['urgent', 'important', 'neutral'];
 
+const REASON_LABELS: Record<MachineReason, string> = {
+    'old-hardware': 'Old Hardware',
+    'faulty': 'Faulty / Broken',
+    'new-user': 'New User',
+};
+
 const STATUS_COLOR: Record<MachineStatus, { bg: string; text: string }> = {
-    pending: { bg: '#fef3c7', text: '#b45309' },
-    approved: { bg: '#d1fae5', text: '#059669' },
+    pending:   { bg: '#fef3c7', text: '#b45309' },
+    approved:  { bg: '#d1fae5', text: '#059669' },
     fulfilled: { bg: '#dbeafe', text: '#1d4ed8' },
-    rejected: { bg: '#fee2e2', text: '#dc2626' },
+    rejected:  { bg: '#fee2e2', text: '#dc2626' },
 };
 
 function MachineCard({ item, onStatusChange }: { item: MachineRequest; onStatusChange: (id: string, status: MachineStatus) => void }) {
@@ -30,26 +36,35 @@ function MachineCard({ item, onStatusChange }: { item: MachineRequest; onStatusC
             <View style={styles.cardHeader}>
                 <Text style={styles.cardNum}>#{item.number}</Text>
                 <View style={[styles.badge, { backgroundColor: c.bg }]}>
-                    <Text style={[styles.badgeText, { color: c.text }]}>{item.status}</Text>
+                    <Text style={[styles.badgeText, { color: c.text }]}>
+                        {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                    </Text>
                 </View>
             </View>
+
             <Text style={styles.cardName}>{item.user_name}</Text>
-            <Text style={styles.cardMeta}>{item.requester_name} · {item.work_email}</Text>
-            <Text style={styles.cardReason}>Reason: {item.reason}</Text>
+            <Text style={styles.cardMeta}>{item.requester_name}{item.work_email ? ` · ${item.work_email}` : ''}</Text>
+
+            <View style={styles.reasonRow}>
+                <Text style={styles.reasonLabel}>Reason:</Text>
+                <Text style={styles.reasonValue}>{REASON_LABELS[item.reason] ?? item.reason}</Text>
+            </View>
+
+            {item.notes ? <Text style={styles.cardNotes} numberOfLines={2}>{item.notes}</Text> : null}
 
             {item.status === 'pending' && (
                 <View style={styles.actionRow}>
                     <TouchableOpacity style={styles.approveBtn} onPress={() => onStatusChange(item.id, 'approved')}>
-                        <Text style={styles.approveBtnText}>Approve</Text>
+                        <Text style={styles.approveBtnText}>✓ Approve</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.rejectBtn} onPress={() => onStatusChange(item.id, 'rejected')}>
-                        <Text style={styles.rejectBtnText}>Reject</Text>
+                        <Text style={styles.rejectBtnText}>✕ Reject</Text>
                     </TouchableOpacity>
                 </View>
             )}
             {item.status === 'approved' && (
                 <TouchableOpacity style={styles.fulfillBtn} onPress={() => onStatusChange(item.id, 'fulfilled')}>
-                    <Text style={styles.fulfillBtnText}>Mark Fulfilled</Text>
+                    <Text style={styles.fulfillBtnText}>Mark as Fulfilled</Text>
                 </TouchableOpacity>
             )}
         </View>
@@ -61,7 +76,14 @@ export default function MachinesScreen() {
     const queryClient = useQueryClient();
     const [statusFilter, setStatusFilter] = useState<MachineStatus | 'all'>('all');
     const [createVisible, setCreateVisible] = useState(false);
-    const [form, setForm] = useState({ requester_name: '', user_name: '', work_email: '', reason: 'faulty' as MachineReason, importance: 'neutral' as ImportanceLevel, notes: '' });
+    const [form, setForm] = useState({
+        requester_name: '',
+        user_name: '',
+        work_email: '',
+        reason: 'faulty' as MachineReason,
+        importance: 'neutral' as ImportanceLevel,
+        notes: '',
+    });
 
     const params: Record<string, string> = {};
     if (statusFilter !== 'all') params.status = statusFilter;
@@ -97,8 +119,14 @@ export default function MachinesScreen() {
             {/* Status filter chips */}
             <View style={styles.filterRow}>
                 {(['all', ...STATUSES] as const).map(s => (
-                    <TouchableOpacity key={s} style={[styles.chip, statusFilter === s && styles.chipActive]} onPress={() => setStatusFilter(s)}>
-                        <Text style={[styles.chipText, statusFilter === s && styles.chipTextActive]}>{s}</Text>
+                    <TouchableOpacity
+                        key={s}
+                        style={[styles.chip, statusFilter === s && styles.chipActive]}
+                        onPress={() => setStatusFilter(s)}
+                    >
+                        <Text style={[styles.chipText, statusFilter === s && styles.chipTextActive]}>
+                            {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+                        </Text>
                     </TouchableOpacity>
                 ))}
             </View>
@@ -123,28 +151,93 @@ export default function MachinesScreen() {
             <FAB icon={() => <Plus size={22} color="#fff" />} style={styles.fab} onPress={() => setCreateVisible(true)} />
 
             <Portal>
-                <Modal visible={createVisible} onDismiss={() => setCreateVisible(false)} contentContainerStyle={styles.modal}>
+                <Modal visible={createVisible} onDismiss={() => setCreateVisible(false)} contentContainerStyle={[styles.modal, { maxHeight: '90%' }]}>
                     <Text style={styles.modalTitle}>New Machine Request</Text>
                     <Divider style={{ marginBottom: 16 }} />
-                    <PaperInput label="Requester Name" value={form.requester_name} onChangeText={v => setForm(f => ({ ...f, requester_name: v }))} mode="outlined" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
-                    <PaperInput label="User Name" value={form.user_name} onChangeText={v => setForm(f => ({ ...f, user_name: v }))} mode="outlined" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
-                    <PaperInput label="Work Email" value={form.work_email} onChangeText={v => setForm(f => ({ ...f, work_email: v }))} mode="outlined" keyboardType="email-address" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
 
-                    <Text style={styles.pickerLabel}>Reason</Text>
-                    <View style={styles.chipRow}>
-                        {REASONS.map(r => <TouchableOpacity key={r} style={[styles.chip, form.reason === r && styles.chipActive]} onPress={() => setForm(f => ({ ...f, reason: r }))}><Text style={[styles.chipText, form.reason === r && styles.chipTextActive]}>{r}</Text></TouchableOpacity>)}
-                    </View>
+                    <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                        <PaperInput
+                            label="Requester Name"
+                            value={form.requester_name}
+                            onChangeText={v => setForm(f => ({ ...f, requester_name: v }))}
+                            mode="outlined"
+                            style={styles.formInput}
+                            outlineColor="#d1d5db"
+                            activeOutlineColor="#059669"
+                        />
+                        <PaperInput
+                            label="User Name"
+                            value={form.user_name}
+                            onChangeText={v => setForm(f => ({ ...f, user_name: v }))}
+                            mode="outlined"
+                            style={styles.formInput}
+                            outlineColor="#d1d5db"
+                            activeOutlineColor="#059669"
+                        />
+                        <PaperInput
+                            label="Work Email"
+                            value={form.work_email}
+                            onChangeText={v => setForm(f => ({ ...f, work_email: v }))}
+                            mode="outlined"
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            style={styles.formInput}
+                            outlineColor="#d1d5db"
+                            activeOutlineColor="#059669"
+                        />
 
-                    <Text style={styles.pickerLabel}>Importance</Text>
-                    <View style={styles.chipRow}>
-                        {IMPORTANCE.map(i => <TouchableOpacity key={i} style={[styles.chip, form.importance === i && styles.chipActive]} onPress={() => setForm(f => ({ ...f, importance: i }))}><Text style={[styles.chipText, form.importance === i && styles.chipTextActive]}>{i}</Text></TouchableOpacity>)}
-                    </View>
+                        <Text style={styles.pickerLabel}>Reason</Text>
+                        <View style={styles.chipRow}>
+                            {REASONS.map(r => (
+                                <TouchableOpacity
+                                    key={r}
+                                    style={[styles.chip, form.reason === r && styles.chipActive]}
+                                    onPress={() => setForm(f => ({ ...f, reason: r }))}
+                                >
+                                    <Text style={[styles.chipText, form.reason === r && styles.chipTextActive]}>
+                                        {REASON_LABELS[r]}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
 
-                    <PaperInput label="Notes (optional)" value={form.notes} onChangeText={v => setForm(f => ({ ...f, notes: v }))} mode="outlined" multiline numberOfLines={2} style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
+                        <Text style={styles.pickerLabel}>Importance</Text>
+                        <View style={styles.chipRow}>
+                            {IMPORTANCE.map(i => (
+                                <TouchableOpacity
+                                    key={i}
+                                    style={[styles.chip, form.importance === i && styles.chipActive]}
+                                    onPress={() => setForm(f => ({ ...f, importance: i }))}
+                                >
+                                    <Text style={[styles.chipText, form.importance === i && styles.chipTextActive]}>
+                                        {i.charAt(0).toUpperCase() + i.slice(1)}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
 
-                    <Button mode="contained" buttonColor="#059669" loading={createMutation.isPending} onPress={() => createMutation.mutate(form)} style={{ marginTop: 8 }}>
-                        Submit Request
-                    </Button>
+                        <PaperInput
+                            label="Notes (optional)"
+                            value={form.notes}
+                            onChangeText={v => setForm(f => ({ ...f, notes: v }))}
+                            mode="outlined"
+                            multiline
+                            numberOfLines={2}
+                            style={styles.formInput}
+                            outlineColor="#d1d5db"
+                            activeOutlineColor="#059669"
+                        />
+
+                        <Button
+                            mode="contained"
+                            buttonColor="#059669"
+                            loading={createMutation.isPending}
+                            onPress={() => createMutation.mutate(form)}
+                            style={{ marginTop: 8, marginBottom: 4 }}
+                        >
+                            Submit Request
+                        </Button>
+                    </ScrollView>
                 </Modal>
             </Portal>
         </SafeAreaView>
@@ -157,29 +250,32 @@ const styles = StyleSheet.create({
     backBtn: { padding: 4, marginRight: 10 },
     title: { fontSize: 20, fontWeight: '700', color: '#111827' },
     filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingHorizontal: 16, marginBottom: 10 },
-    chip: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, backgroundColor: '#f3f4f6', borderWidth: 1, borderColor: '#e5e7eb' },
+    chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: '#f3f4f6', borderWidth: 1, borderColor: '#e5e7eb' },
     chipActive: { backgroundColor: '#d1fae5', borderColor: '#059669' },
-    chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
-    chipText: { fontSize: 12, color: '#6b7280', textTransform: 'capitalize' },
+    chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+    chipText: { fontSize: 12, color: '#6b7280' },
     chipTextActive: { color: '#059669', fontWeight: '600' },
     card: { backgroundColor: '#fff', borderRadius: 14, padding: 14, marginHorizontal: 16, marginVertical: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 3, elevation: 2 },
-    cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+    cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
     cardNum: { fontSize: 12, fontWeight: '700', color: '#0284c7' },
     badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 99 },
-    badgeText: { fontSize: 11, fontWeight: '600', textTransform: 'capitalize' },
-    cardName: { fontSize: 15, fontWeight: '600', color: '#111827', marginBottom: 2 },
-    cardMeta: { fontSize: 13, color: '#6b7280', marginBottom: 2 },
-    cardReason: { fontSize: 13, color: '#9ca3af', textTransform: 'capitalize', marginBottom: 10 },
+    badgeText: { fontSize: 11, fontWeight: '600' },
+    cardName: { fontSize: 15, fontWeight: '600', color: '#111827', marginBottom: 3 },
+    cardMeta: { fontSize: 13, color: '#6b7280', marginBottom: 4 },
+    reasonRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 10 },
+    reasonLabel: { fontSize: 12, color: '#9ca3af', fontWeight: '500' },
+    reasonValue: { fontSize: 12, color: '#374151', fontWeight: '600' },
+    cardNotes: { fontSize: 13, color: '#6b7280', lineHeight: 18, marginBottom: 10 },
     actionRow: { flexDirection: 'row', gap: 10 },
-    approveBtn: { flex: 1, backgroundColor: '#d1fae5', borderRadius: 8, padding: 8, alignItems: 'center' },
-    approveBtnText: { color: '#059669', fontWeight: '600', fontSize: 13 },
-    rejectBtn: { flex: 1, backgroundColor: '#fee2e2', borderRadius: 8, padding: 8, alignItems: 'center' },
-    rejectBtnText: { color: '#dc2626', fontWeight: '600', fontSize: 13 },
-    fulfillBtn: { backgroundColor: '#dbeafe', borderRadius: 8, padding: 8, alignItems: 'center' },
-    fulfillBtnText: { color: '#1d4ed8', fontWeight: '600', fontSize: 13 },
+    approveBtn: { flex: 1, backgroundColor: '#d1fae5', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+    approveBtnText: { color: '#059669', fontWeight: '700', fontSize: 13 },
+    rejectBtn: { flex: 1, backgroundColor: '#fee2e2', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+    rejectBtnText: { color: '#dc2626', fontWeight: '700', fontSize: 13 },
+    fulfillBtn: { backgroundColor: '#dbeafe', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+    fulfillBtnText: { color: '#1d4ed8', fontWeight: '700', fontSize: 13 },
     fab: { position: 'absolute', bottom: 24, right: 20, backgroundColor: '#059669' },
     modal: { backgroundColor: '#fff', margin: 20, borderRadius: 20, padding: 24 },
     modalTitle: { fontSize: 20, fontWeight: '700', color: '#111827', marginBottom: 12 },
     formInput: { marginBottom: 10, backgroundColor: '#f9fafb' },
-    pickerLabel: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+    pickerLabel: { fontSize: 12, fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
 });

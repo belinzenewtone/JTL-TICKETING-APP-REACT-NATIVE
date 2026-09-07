@@ -31,7 +31,9 @@ export function TicketCard({ ticket, onPress }: Props) {
             </View>
 
             <Text style={styles.subject} numberOfLines={2}>{ticket.subject}</Text>
-            <Text style={styles.employee}>{ticket.employee_name} · {ticket.department}</Text>
+            <Text style={styles.employee}>
+                {ticket.employee_name}{ticket.department ? ` · ${ticket.department}` : ''}
+            </Text>
 
             <View style={styles.footer}>
                 <View style={styles.footerLeft}>

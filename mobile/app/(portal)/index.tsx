@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
     View, Text, StyleSheet, FlatList,
-    TouchableOpacity, RefreshControl,
+    TouchableOpacity, RefreshControl, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FAB, Modal, Portal, Button, Divider, TextInput as PaperInput } from 'react-native-paper';
@@ -140,45 +140,49 @@ export default function PortalScreen() {
             />
 
             <Portal>
-                <Modal visible={createVisible} onDismiss={() => setCreateVisible(false)} contentContainerStyle={styles.modal}>
+                <Modal visible={createVisible} onDismiss={() => setCreateVisible(false)} contentContainerStyle={[styles.modal, { maxHeight: '90%' }]}>
                     <Text style={styles.modalTitle}>Submit a Ticket</Text>
                     <Divider style={{ marginBottom: 16 }} />
 
-                    <PaperInput
-                        label="Subject"
-                        value={subject}
-                        onChangeText={setSubject}
-                        mode="outlined"
-                        style={styles.formInput}
-                        outlineColor="#d1d5db"
-                        activeOutlineColor="#059669"
-                        placeholder="Briefly describe your issue"
-                    />
-                    <PaperInput
-                        label="Description (optional)"
-                        value={description}
-                        onChangeText={setDescription}
-                        mode="outlined"
-                        multiline
-                        numberOfLines={4}
-                        style={styles.formInput}
-                        outlineColor="#d1d5db"
-                        activeOutlineColor="#059669"
-                        placeholder="Provide more detail…"
-                    />
+                    <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                        <PaperInput
+                            label="Subject"
+                            value={subject}
+                            onChangeText={setSubject}
+                            mode="outlined"
+                            style={styles.formInput}
+                            outlineColor="#d1d5db"
+                            activeOutlineColor="#059669"
+                            placeholder="Briefly describe your issue"
+                        />
+                        <PaperInput
+                            label="Description (optional)"
+                            value={description}
+                            onChangeText={setDescription}
+                            mode="outlined"
+                            multiline
+                            numberOfLines={4}
+                            style={styles.formInput}
+                            outlineColor="#d1d5db"
+                            activeOutlineColor="#059669"
+                            placeholder="Provide more detail…"
+                        />
 
-                    <Text style={styles.filterLabel}>Category</Text>
-                    <View style={styles.chipRow}>
-                        {CATEGORIES.map(c => (
-                            <TouchableOpacity key={c} style={[styles.chip, category === c && styles.chipActive]} onPress={() => setCategory(c)}>
-                                <Text style={[styles.chipText, category === c && styles.chipTextActive]}>{c}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
+                        <Text style={styles.filterLabel}>Category</Text>
+                        <View style={styles.chipRow}>
+                            {CATEGORIES.map(c => (
+                                <TouchableOpacity key={c} style={[styles.chip, category === c && styles.chipActive]} onPress={() => setCategory(c)}>
+                                    <Text style={[styles.chipText, category === c && styles.chipTextActive]}>
+                                        {CATEGORY_LABELS[c] ?? c}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
 
-                    <Button mode="contained" buttonColor="#059669" loading={submitMutation.isPending} onPress={handleSubmit} style={{ marginTop: 16 }}>
-                        Submit Ticket
-                    </Button>
+                        <Button mode="contained" buttonColor="#059669" loading={submitMutation.isPending} onPress={handleSubmit} style={{ marginTop: 16, marginBottom: 4 }}>
+                            Submit Ticket
+                        </Button>
+                    </ScrollView>
                 </Modal>
             </Portal>
         </SafeAreaView>

@@ -134,52 +134,56 @@ export default function KnowledgeBaseScreen() {
 
             <Portal>
                 {/* Create modal */}
-                <Modal visible={createVisible} onDismiss={() => setCreateVisible(false)} contentContainerStyle={styles.modal}>
+                <Modal visible={createVisible} onDismiss={() => setCreateVisible(false)} contentContainerStyle={[styles.modal, { maxHeight: '88%' }]}>
                     <Text style={styles.modalTitle}>New Article</Text>
                     <Divider style={{ marginBottom: 16 }} />
-                    <PaperInput label="Title" value={newTitle} onChangeText={setNewTitle} mode="outlined" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
-                    <PaperInput label="Content" value={newContent} onChangeText={setNewContent} mode="outlined" multiline numberOfLines={6} style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
-                    <Button mode="contained" buttonColor="#059669" loading={createMutation.isPending} onPress={() => createMutation.mutate({ title: newTitle, content: newContent })} style={{ marginTop: 8 }}>
-                        Create Article
-                    </Button>
+                    <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                        <PaperInput label="Title" value={newTitle} onChangeText={setNewTitle} mode="outlined" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
+                        <PaperInput label="Content" value={newContent} onChangeText={setNewContent} mode="outlined" multiline numberOfLines={6} style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
+                        <Button mode="contained" buttonColor="#059669" loading={createMutation.isPending} onPress={() => createMutation.mutate({ title: newTitle, content: newContent })} style={{ marginTop: 8, marginBottom: 4 }}>
+                            Create Article
+                        </Button>
+                    </ScrollView>
                 </Modal>
 
                 {/* Edit modal */}
-                <Modal visible={!!editingArticle} onDismiss={() => setEditingArticle(null)} contentContainerStyle={styles.modal}>
+                <Modal visible={!!editingArticle} onDismiss={() => setEditingArticle(null)} contentContainerStyle={[styles.modal, { maxHeight: '88%' }]}>
                     <Text style={styles.modalTitle}>Edit Article</Text>
                     <Divider style={{ marginBottom: 16 }} />
-                    <PaperInput
-                        label="Title"
-                        value={editTitle}
-                        onChangeText={setEditTitle}
-                        mode="outlined"
-                        style={styles.formInput}
-                        outlineColor="#d1d5db"
-                        activeOutlineColor="#059669"
-                    />
-                    <PaperInput
-                        label="Content"
-                        value={editContent}
-                        onChangeText={setEditContent}
-                        mode="outlined"
-                        multiline
-                        numberOfLines={6}
-                        style={styles.formInput}
-                        outlineColor="#d1d5db"
-                        activeOutlineColor="#059669"
-                    />
-                    <View style={styles.rowButtons}>
-                        <Button mode="outlined" onPress={() => setEditingArticle(null)} style={{ flex: 1 }}>Cancel</Button>
-                        <Button
-                            mode="contained"
-                            buttonColor="#059669"
-                            loading={updateMutation.isPending}
-                            onPress={handleUpdate}
-                            style={{ flex: 1 }}
-                        >
-                            Save
-                        </Button>
-                    </View>
+                    <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                        <PaperInput
+                            label="Title"
+                            value={editTitle}
+                            onChangeText={setEditTitle}
+                            mode="outlined"
+                            style={styles.formInput}
+                            outlineColor="#d1d5db"
+                            activeOutlineColor="#059669"
+                        />
+                        <PaperInput
+                            label="Content"
+                            value={editContent}
+                            onChangeText={setEditContent}
+                            mode="outlined"
+                            multiline
+                            numberOfLines={6}
+                            style={styles.formInput}
+                            outlineColor="#d1d5db"
+                            activeOutlineColor="#059669"
+                        />
+                        <View style={[styles.rowButtons, { marginBottom: 4 }]}>
+                            <Button mode="outlined" onPress={() => setEditingArticle(null)} style={{ flex: 1 }}>Cancel</Button>
+                            <Button
+                                mode="contained"
+                                buttonColor="#059669"
+                                loading={updateMutation.isPending}
+                                onPress={handleUpdate}
+                                style={{ flex: 1 }}
+                            >
+                                Save
+                            </Button>
+                        </View>
+                    </ScrollView>
                 </Modal>
 
                 {/* View article modal */}

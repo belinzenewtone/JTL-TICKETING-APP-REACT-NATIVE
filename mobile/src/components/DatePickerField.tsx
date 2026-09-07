@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity,
-    Modal, FlatList, Pressable,
+    Modal, Pressable,
 } from 'react-native';
 import { Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react-native';
 

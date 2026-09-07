@@ -167,7 +167,7 @@ export default function TicketDetailScreen() {
                         {user?.role !== 'USER' && (
                             <>
                                 <View style={styles.resolutionHeader}>
-                                    <Text style={styles.sectionLabel}>Resolution Notes</Text>
+                                    <Text style={[styles.sectionLabel, { marginBottom: 0 }]}>Resolution Notes</Text>
                                     {!editingNotes && (
                                         <TouchableOpacity
                                             onPress={() => { setNotesValue(ticket.resolution_notes ?? ''); setEditingNotes(true); }}

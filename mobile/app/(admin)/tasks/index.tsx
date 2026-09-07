@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
     View, Text, StyleSheet, FlatList,
-    TouchableOpacity, TextInput, RefreshControl,
+    TouchableOpacity, TextInput, RefreshControl, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FAB, Modal, Portal, Button, Divider, TextInput as PaperInput } from 'react-native-paper';
@@ -132,40 +132,44 @@ export default function TasksScreen() {
             <FAB icon={() => <Plus size={22} color="#ffffff" />} style={styles.fab} onPress={() => setCreateVisible(true)} />
 
             <Portal>
-                <Modal visible={createVisible} onDismiss={() => setCreateVisible(false)} contentContainerStyle={styles.modal}>
+                <Modal visible={createVisible} onDismiss={() => setCreateVisible(false)} contentContainerStyle={[styles.modal, { maxHeight: '90%' }]}>
                     <Text style={styles.modalTitle}>New Task</Text>
                     <Divider style={{ marginBottom: 16 }} />
 
-                    <PaperInput
-                        label="Task description"
-                        value={newText}
-                        onChangeText={setNewText}
-                        mode="outlined"
-                        multiline
-                        numberOfLines={3}
-                        style={styles.formInput}
-                        outlineColor="#d1d5db"
-                        activeOutlineColor="#059669"
-                    />
+                    <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                        <PaperInput
+                            label="Task description"
+                            value={newText}
+                            onChangeText={setNewText}
+                            mode="outlined"
+                            multiline
+                            numberOfLines={3}
+                            style={styles.formInput}
+                            outlineColor="#d1d5db"
+                            activeOutlineColor="#059669"
+                        />
 
-                    <DatePickerField
-                        label="Due date"
-                        value={newDate}
-                        onChangeDate={setNewDate}
-                    />
+                        <DatePickerField
+                            label="Due date"
+                            value={newDate}
+                            onChangeDate={setNewDate}
+                        />
 
-                    <Text style={styles.filterLabel}>Importance</Text>
-                    <View style={styles.chipRow}>
-                        {IMPORTANCES.map(i => (
-                            <TouchableOpacity key={i} style={[styles.chip, newImportance === i && styles.chipActive]} onPress={() => setNewImportance(i)}>
-                                <Text style={[styles.chipText, newImportance === i && styles.chipTextActive]}>{i}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
+                        <Text style={styles.filterLabel}>Importance</Text>
+                        <View style={styles.chipRow}>
+                            {IMPORTANCES.map(i => (
+                                <TouchableOpacity key={i} style={[styles.chip, newImportance === i && styles.chipActive]} onPress={() => setNewImportance(i)}>
+                                    <Text style={[styles.chipText, newImportance === i && styles.chipTextActive]}>
+                                        {i.charAt(0).toUpperCase() + i.slice(1)}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
 
-                    <Button mode="contained" buttonColor="#059669" loading={createMutation.isPending} onPress={handleCreate} style={{ marginTop: 16 }}>
-                        Add Task
-                    </Button>
+                        <Button mode="contained" buttonColor="#059669" loading={createMutation.isPending} onPress={handleCreate} style={{ marginTop: 16, marginBottom: 4 }}>
+                            Add Task
+                        </Button>
+                    </ScrollView>
                 </Modal>
             </Portal>
         </SafeAreaView>
