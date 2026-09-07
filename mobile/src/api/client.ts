@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 
 // Use EXPO_PUBLIC_API_URL env-var for dev/staging, fall back to production
 export const BASE_URL =
-    process.env.EXPO_PUBLIC_API_URL ?? 'https://ticketingjtl.vercel.app/api/mobile';
+    process.env.EXPO_PUBLIC_API_URL ?? 'https://ticketing-system-belinzenewtones-projects.vercel.app/api/mobile';
 
 export const api = axios.create({
     baseURL: BASE_URL,
