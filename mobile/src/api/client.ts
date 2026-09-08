@@ -58,6 +58,8 @@ export const tasksApi = {
 export const portalApi = {
     myTickets: () => api.get('/portal/tickets'),
     submit: (data: unknown) => api.post('/portal/tickets', data),
+    myMachineRequests: () => api.get('/portal/machines'),
+    submitMachineRequest: (data: unknown) => api.post('/portal/machines', data),
 };
 
 // ── Comments ──────────────────────────────────────────────────────────────────
@@ -65,6 +67,8 @@ export const commentsApi = {
     list: (ticketId: string) => api.get('/comments', { params: { ticket_id: ticketId } }),
     create: (data: unknown) => api.post('/comments', data),
     delete: (id: string) => api.delete(`/comments/${id}`),
+    listForMachine: (machineId: string) => api.get('/machine-comments', { params: { machine_id: machineId } }),
+    createForMachine: (data: unknown) => api.post('/machine-comments', data),
 };
 
 // ── Activity ──────────────────────────────────────────────────────────────────

@@ -5,15 +5,22 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Divider, TextInput as PaperInput, Modal, Portal } from 'react-native-paper';
+// ScrollView already imported above — used in both ticket scroll and edit modal
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Send, Lock, Globe, Trash2, UserCheck, Activity } from 'lucide-react-native';
+import { ArrowLeft, Send, Lock, Globe, Trash2, UserCheck, Activity, Pencil } from 'lucide-react-native';
 import { ticketsApi, commentsApi, staffApi, activityApi } from '@/api/client';
 import { StatusBadge, PriorityBadge } from '@/components/StatusBadge';
 import { useAuthStore } from '@/store/useAuthStore';
-import type { Ticket, TicketComment, TicketStatus, StaffUser, ActivityEntry } from '@/types/database';
+import type { Ticket, TicketComment, TicketStatus, TicketPriority, TicketCategory, StaffUser, ActivityEntry } from '@/types/database';
 
 const STATUSES: TicketStatus[] = ['open', 'in-progress', 'resolved', 'closed'];
+const PRIORITIES: TicketPriority[] = ['critical', 'high', 'medium', 'low'];
+const CATEGORIES: TicketCategory[] = ['email', 'account-login', 'password-reset', 'hardware', 'software', 'network-vpn', 'other'];
+const CATEGORY_LABELS: Record<TicketCategory, string> = {
+    'email': 'Email', 'account-login': 'Acct Login', 'password-reset': 'Pwd Reset',
+    'hardware': 'Hardware', 'software': 'Software', 'network-vpn': 'Network/VPN', 'other': 'Other',
+};
 
 function formatDate(s: string) {
     try { return new Date(s).toLocaleString('en-KE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
@@ -36,6 +43,8 @@ export default function TicketDetailScreen() {
     const [showActivity, setShowActivity] = useState(false);
     const [editingNotes, setEditingNotes] = useState(false);
     const [notesValue, setNotesValue] = useState('');
+    const [editModalVisible, setEditModalVisible] = useState(false);
+    const [editForm, setEditForm] = useState({ employee_name: '', department: '', subject: '', description: '', category: 'other' as TicketCategory, priority: 'medium' as TicketPriority, internal_notes: '' });
 
     const { data: ticket, isLoading } = useQuery({
         queryKey: ['ticket', id],
@@ -90,6 +99,26 @@ export default function TicketDetailScreen() {
         setStaffPickerVisible(false);
     };
 
+    const openEditModal = () => {
+        if (!ticket) return;
+        setEditForm({
+            employee_name: ticket.employee_name ?? '',
+            department: ticket.department ?? '',
+            subject: ticket.subject ?? '',
+            description: ticket.description ?? '',
+            category: ticket.category ?? 'other',
+            priority: ticket.priority ?? 'medium',
+            internal_notes: ticket.internal_notes ?? '',
+        });
+        setEditModalVisible(true);
+    };
+
+    const handleEditSave = () => {
+        updateMutation.mutate(editForm, {
+            onSuccess: () => setEditModalVisible(false),
+        });
+    };
+
     if (isLoading || !ticket) {
         return (
             <SafeAreaView style={styles.root} edges={['top']}>
@@ -115,9 +144,14 @@ export default function TicketDetailScreen() {
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>#{ticket.number}</Text>
                     {user?.role !== 'USER' && (
-                        <TouchableOpacity onPress={handleDelete} style={styles.deleteBtn}>
-                            <Trash2 size={18} color="#dc2626" />
-                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', gap: 4 }}>
+                            <TouchableOpacity onPress={openEditModal} style={styles.deleteBtn}>
+                                <Pencil size={18} color="#6b7280" />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={handleDelete} style={styles.deleteBtn}>
+                                <Trash2 size={18} color="#dc2626" />
+                            </TouchableOpacity>
+                        </View>
                     )}
                 </View>
 
@@ -338,6 +372,43 @@ export default function TicketDetailScreen() {
 
                     <Button mode="outlined" onPress={() => setStaffPickerVisible(false)} style={{ marginTop: 12 }}>Cancel</Button>
                 </Modal>
+
+                {/* Edit ticket modal */}
+                <Modal visible={editModalVisible} onDismiss={() => setEditModalVisible(false)} contentContainerStyle={[styles.modal, { maxHeight: '92%' }]}>
+                    <Text style={styles.modalTitle}>Edit Ticket</Text>
+                    <Divider style={{ marginBottom: 16 }} />
+                    <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                        <PaperInput label="Employee Name" value={editForm.employee_name} onChangeText={v => setEditForm(f => ({ ...f, employee_name: v }))} mode="outlined" style={styles.editInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
+                        <PaperInput label="Department" value={editForm.department} onChangeText={v => setEditForm(f => ({ ...f, department: v }))} mode="outlined" style={styles.editInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
+                        <PaperInput label="Subject" value={editForm.subject} onChangeText={v => setEditForm(f => ({ ...f, subject: v }))} mode="outlined" style={styles.editInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
+                        <PaperInput label="Description" value={editForm.description} onChangeText={v => setEditForm(f => ({ ...f, description: v }))} mode="outlined" multiline numberOfLines={4} style={styles.editInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
+
+                        <Text style={styles.sectionLabel}>Category</Text>
+                        <View style={styles.chipRow}>
+                            {CATEGORIES.map(c => (
+                                <TouchableOpacity key={c} style={[styles.chip, editForm.category === c && styles.chipActive]} onPress={() => setEditForm(f => ({ ...f, category: c }))}>
+                                    <Text style={[styles.chipText, editForm.category === c && styles.chipTextActive]}>{CATEGORY_LABELS[c]}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        <Text style={styles.sectionLabel}>Priority</Text>
+                        <View style={styles.chipRow}>
+                            {PRIORITIES.map(p => (
+                                <TouchableOpacity key={p} style={[styles.chip, editForm.priority === p && styles.chipActive]} onPress={() => setEditForm(f => ({ ...f, priority: p }))}>
+                                    <Text style={[styles.chipText, editForm.priority === p && styles.chipTextActive]}>{p.charAt(0).toUpperCase() + p.slice(1)}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        <PaperInput label="Internal IT Notes" value={editForm.internal_notes} onChangeText={v => setEditForm(f => ({ ...f, internal_notes: v }))} mode="outlined" multiline numberOfLines={3} style={[styles.editInput, { backgroundColor: '#fffbeb' }]} outlineColor="#f59e0b" activeOutlineColor="#b45309" />
+
+                        <View style={{ flexDirection: 'row', gap: 10, marginTop: 8, marginBottom: 4 }}>
+                            <Button mode="outlined" onPress={() => setEditModalVisible(false)} style={{ flex: 1 }}>Cancel</Button>
+                            <Button mode="contained" buttonColor="#059669" loading={updateMutation.isPending} onPress={handleEditSave} style={{ flex: 1 }}>Save</Button>
+                        </View>
+                    </ScrollView>
+                </Modal>
             </Portal>
         </SafeAreaView>
     );
@@ -398,4 +469,6 @@ const styles = StyleSheet.create({
     staffAvatarText: { fontSize: 14, fontWeight: '700', color: '#4f46e5' },
     staffName: { fontSize: 14, fontWeight: '600', color: '#111827' },
     staffEmail: { fontSize: 12, color: '#9ca3af' },
+    editInput: { marginBottom: 10, backgroundColor: '#f9fafb' },
+    ScrollView: {},
 });

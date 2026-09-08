@@ -23,6 +23,10 @@ export default function TasksScreen() {
     const [newText, setNewText] = useState('');
     const [newImportance, setNewImportance] = useState<ImportanceLevel>('neutral');
     const [newDate, setNewDate] = useState('');
+    const [editingTask, setEditingTask] = useState<Task | null>(null);
+    const [editText, setEditText] = useState('');
+    const [editImportance, setEditImportance] = useState<ImportanceLevel>('neutral');
+    const [editDate, setEditDate] = useState('');
 
     const params: Record<string, string> = {};
     if (taskFilter === 'completed') params.completed = 'true';
@@ -57,6 +61,21 @@ export default function TasksScreen() {
         mutationFn: (id: string) => tasksApi.delete(id),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks'] }),
     });
+
+    const updateMutation = useMutation({
+        mutationFn: ({ id, data }: { id: string; data: any }) => tasksApi.update(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['tasks'] });
+            setEditingTask(null);
+        },
+    });
+
+    const openEdit = (task: Task) => {
+        setEditingTask(task);
+        setEditText(task.text);
+        setEditImportance(task.importance);
+        setEditDate(task.date ?? '');
+    };
 
     const handleCreate = () => {
         if (!newText.trim()) return;
@@ -117,6 +136,7 @@ export default function TasksScreen() {
                         task={item}
                         onToggle={() => toggleMutation.mutate({ id: item.id, completed: !item.completed })}
                         onDelete={() => deleteMutation.mutate(item.id)}
+                        onEdit={() => openEdit(item)}
                     />
                 )}
                 contentContainerStyle={tasks.length === 0 ? { flex: 1 } : { paddingBottom: 100 }}
@@ -169,6 +189,48 @@ export default function TasksScreen() {
                         <Button mode="contained" buttonColor="#059669" loading={createMutation.isPending} onPress={handleCreate} style={{ marginTop: 16, marginBottom: 4 }}>
                             Add Task
                         </Button>
+                    </ScrollView>
+                </Modal>
+
+                {/* Edit task modal */}
+                <Modal visible={!!editingTask} onDismiss={() => setEditingTask(null)} contentContainerStyle={[styles.modal, { maxHeight: '85%' }]}>
+                    <Text style={styles.modalTitle}>Edit Task</Text>
+                    <Divider style={{ marginBottom: 16 }} />
+                    <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                        <PaperInput
+                            label="Task description"
+                            value={editText}
+                            onChangeText={setEditText}
+                            mode="outlined"
+                            multiline
+                            numberOfLines={3}
+                            style={styles.formInput}
+                            outlineColor="#d1d5db"
+                            activeOutlineColor="#059669"
+                        />
+                        <DatePickerField label="Due date" value={editDate} onChangeDate={setEditDate} />
+                        <Text style={styles.filterLabel}>Importance</Text>
+                        <View style={styles.chipRow}>
+                            {IMPORTANCES.map(i => (
+                                <TouchableOpacity key={i} style={[styles.chip, editImportance === i && styles.chipActive]} onPress={() => setEditImportance(i)}>
+                                    <Text style={[styles.chipText, editImportance === i && styles.chipTextActive]}>
+                                        {i.charAt(0).toUpperCase() + i.slice(1)}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                        <View style={{ flexDirection: 'row', gap: 10, marginTop: 16, marginBottom: 4 }}>
+                            <Button mode="outlined" onPress={() => setEditingTask(null)} style={{ flex: 1 }}>Cancel</Button>
+                            <Button
+                                mode="contained"
+                                buttonColor="#059669"
+                                loading={updateMutation.isPending}
+                                onPress={() => editingTask && updateMutation.mutate({ id: editingTask.id, data: { text: editText.trim(), importance: editImportance, date: editDate } })}
+                                style={{ flex: 1 }}
+                            >
+                                Save
+                            </Button>
+                        </View>
                     </ScrollView>
                 </Modal>
             </Portal>

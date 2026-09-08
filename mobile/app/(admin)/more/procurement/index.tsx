@@ -207,7 +207,7 @@ export default function ProcurementScreen() {
                 renderItem={({ item }: { item: Requisition }) => (
                     <RequisitionCard
                         item={item}
-                        onPress={() => {}}
+                        onPress={() => router.push(`/(admin)/more/procurement/${item.id}` as any)}
                         onApprove={() => handleApprove(item.id)}
                         onReject={() => handleReject(item.id)}
                     />

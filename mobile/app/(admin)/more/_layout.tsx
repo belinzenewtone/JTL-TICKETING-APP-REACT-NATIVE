@@ -7,6 +7,9 @@ export default function MoreLayout() {
             <Stack.Screen name="dashboard" />
             <Stack.Screen name="knowledge-base" />
             <Stack.Screen name="machines" />
+            <Stack.Screen name="entries" />
+            <Stack.Screen name="reports" />
+            <Stack.Screen name="procurement" />
         </Stack>
     );
 }

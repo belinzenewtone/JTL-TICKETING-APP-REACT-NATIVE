@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Checkbox } from 'react-native-paper';
-import { Trash2 } from 'lucide-react-native';
+import { Trash2, Pencil } from 'lucide-react-native';
 import { ImportanceBadge } from './StatusBadge';
 import type { Task } from '@/types/database';
 
@@ -8,9 +8,10 @@ interface Props {
     task: Task;
     onToggle: () => void;
     onDelete: () => void;
+    onEdit?: () => void;
 }
 
-export function TaskCard({ task, onToggle, onDelete }: Props) {
+export function TaskCard({ task, onToggle, onDelete, onEdit }: Props) {
     return (
         <View style={[styles.card, task.completed && styles.completedCard]}>
             <Checkbox
@@ -27,7 +28,12 @@ export function TaskCard({ task, onToggle, onDelete }: Props) {
                     {task.date ? <Text style={styles.date}>{task.date}</Text> : null}
                 </View>
             </View>
-            <TouchableOpacity onPress={onDelete} style={styles.deleteBtn} hitSlop={8}>
+            {onEdit && (
+                <TouchableOpacity onPress={onEdit} style={styles.actionBtn} hitSlop={8}>
+                    <Pencil size={14} color="#9ca3af" />
+                </TouchableOpacity>
+            )}
+            <TouchableOpacity onPress={onDelete} style={styles.actionBtn} hitSlop={8}>
                 <Trash2 size={16} color="#d1d5db" />
             </TouchableOpacity>
         </View>
@@ -49,5 +55,5 @@ const styles = StyleSheet.create({
     completedText: { textDecorationLine: 'line-through', color: '#9ca3af' },
     meta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     date: { fontSize: 12, color: '#9ca3af' },
-    deleteBtn: { padding: 4 },
+    actionBtn: { padding: 4, marginLeft: 2 },
 });

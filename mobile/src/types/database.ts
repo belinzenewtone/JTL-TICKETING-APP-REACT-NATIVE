@@ -4,6 +4,7 @@ export type UserRole = 'ADMIN' | 'IT_STAFF' | 'USER';
 export type ImportanceLevel = 'urgent' | 'important' | 'neutral';
 export type MachineReason = 'old-hardware' | 'faulty' | 'new-user';
 export type MachineStatus = 'pending' | 'approved' | 'fulfilled' | 'rejected';
+export type MachineItemType = 'desktop' | 'laptop' | 'supplies';
 
 export interface Profile {
     id: string;
@@ -150,7 +151,50 @@ export interface MachineRequest {
     work_email: string;
     reason: MachineReason;
     importance: ImportanceLevel;
+    item_type: MachineItemType | null;
+    item_count: number | null;
+    supply_name: string | null;
     status: MachineStatus;
+    notes: string | null;
+    resolution_notes: string | null;
+    internal_notes: string | null;
+    created_by: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export type ResolutionType = 'sorted' | 'alt-email' | 'alt-phone' | 'alt-both' | 'never-used' | 'licensing';
+
+export interface Entry {
+    id: string;
+    entry_date: string;
+    employee_name: string;
+    work_email: string;
+    employee_phone: string | null;
+    alt_email_status: string | null;
+    alt_email: string | null;
+    resolution: ResolutionType;
+    completed: boolean;
+    created_by: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export type RequisitionType = 'it-equipment' | 'office-supplies' | 'services' | 'other';
+
+export interface Requisition {
+    id: string;
+    number: number;
+    title: string;
+    requisition_date: string | null;
+    requested_for: string | null;
+    requestor_name: string | null;
+    requestor_email: string | null;
+    supplier_name: string;
+    item_quantity: number | null;
+    total_amount: number | null;
+    item_type: RequisitionType | null;
+    current_stage: string;
     notes: string | null;
     created_by: string | null;
     created_at: string;

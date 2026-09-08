@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FAB, Modal, Portal, Button, Divider, TextInput as PaperInput } from 'react-native-paper';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Search, X, Plus, CheckCircle2, Circle, Mail } from 'lucide-react-native';
+import { ArrowLeft, Search, X, Plus, CheckCircle2, Circle, Mail, Pencil } from 'lucide-react-native';
 import { entriesApi } from '@/api/client';
 import { EmptyState } from '@/components/EmptyState';
 import type { Entry, ResolutionType } from '@/types/database';
@@ -28,7 +28,7 @@ const RES_COLORS: Record<ResolutionType, { bg: string; text: string }> = {
     'licensing':  { bg: '#fef3c7', text: '#b45309' },
 };
 
-function EntryCard({ item, onToggle, onDelete }: { item: Entry; onToggle: () => void; onDelete: () => void }) {
+function EntryCard({ item, onToggle, onDelete, onEdit }: { item: Entry; onToggle: () => void; onDelete: () => void; onEdit: () => void }) {
     const res = RES_COLORS[item.resolution] ?? { bg: '#f3f4f6', text: '#6b7280' };
     return (
         <View style={styles.card}>
@@ -52,9 +52,14 @@ function EntryCard({ item, onToggle, onDelete }: { item: Entry; onToggle: () => 
             )}
             <View style={styles.cardFooter}>
                 <Text style={styles.cardDate}>{item.entry_date}</Text>
-                <TouchableOpacity onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                    <Text style={styles.deleteBtn}>Delete</Text>
-                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', gap: 12 }}>
+                    <TouchableOpacity onPress={onEdit} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                        <Pencil size={14} color="#6b7280" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                        <Text style={styles.deleteBtn}>Delete</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         </View>
     );
@@ -66,6 +71,7 @@ export default function EntriesScreen() {
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState<'all' | 'pending' | 'sorted'>('all');
     const [createVisible, setCreateVisible] = useState(false);
+    const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
     const [form, setForm] = useState({
         employee_name: '',
         work_email: '',
@@ -74,6 +80,7 @@ export default function EntriesScreen() {
         alt_email: '',
         resolution: 'sorted' as ResolutionType,
     });
+    const [editForm, setEditForm] = useState({ ...form });
 
     const params: Record<string, string> = {};
     if (search) params.search = search;
@@ -84,6 +91,26 @@ export default function EntriesScreen() {
         queryKey: ['entries', params],
         queryFn: () => entriesApi.list(params).then(r => r.data as Entry[]),
     });
+
+    const updateMutation = useMutation({
+        mutationFn: ({ id, data }: { id: string; data: any }) => entriesApi.update(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['entries'] });
+            setEditingEntry(null);
+        },
+    });
+
+    const openEdit = (entry: Entry) => {
+        setEditingEntry(entry);
+        setEditForm({
+            employee_name: entry.employee_name,
+            work_email: entry.work_email,
+            employee_phone: entry.employee_phone ?? '',
+            alt_email_status: entry.alt_email_status ?? 'n/a',
+            alt_email: entry.alt_email ?? '',
+            resolution: entry.resolution,
+        });
+    };
 
     const toggleMutation = useMutation({
         mutationFn: ({ id, completed }: { id: string; completed: boolean }) =>
@@ -186,6 +213,7 @@ export default function EntriesScreen() {
                         item={item}
                         onToggle={() => toggleMutation.mutate({ id: item.id, completed: !item.completed })}
                         onDelete={() => confirmDelete(item.id)}
+                        onEdit={() => openEdit(item)}
                     />
                 )}
             />
@@ -226,6 +254,43 @@ export default function EntriesScreen() {
                         <Button mode="contained" buttonColor="#059669" loading={createMutation.isPending} onPress={handleCreate} style={{ marginTop: 12, marginBottom: 4 }}>
                             Log Entry
                         </Button>
+                    </ScrollView>
+                </Modal>
+
+                {/* Edit modal */}
+                <Modal visible={!!editingEntry} onDismiss={() => setEditingEntry(null)} contentContainerStyle={[styles.modal, { maxHeight: '92%' }]}>
+                    <Text style={styles.modalTitle}>Edit Entry</Text>
+                    <Divider style={{ marginBottom: 16 }} />
+                    <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                        <PaperInput label="Employee Name" value={editForm.employee_name} onChangeText={v => setEditForm(f => ({ ...f, employee_name: v }))} mode="outlined" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
+                        <PaperInput label="Work Email" value={editForm.work_email} onChangeText={v => setEditForm(f => ({ ...f, work_email: v }))} mode="outlined" keyboardType="email-address" autoCapitalize="none" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
+                        <PaperInput label="Phone (optional)" value={editForm.employee_phone} onChangeText={v => setEditForm(f => ({ ...f, employee_phone: v }))} mode="outlined" keyboardType="phone-pad" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
+
+                        <Text style={styles.pickerLabel}>Alt Email Status</Text>
+                        <View style={styles.chipRow}>
+                            {ALT_STATUS_OPTIONS.map(s => (
+                                <TouchableOpacity key={s} style={[styles.chip, editForm.alt_email_status === s && styles.chipActive]} onPress={() => setEditForm(f => ({ ...f, alt_email_status: s }))}>
+                                    <Text style={[styles.chipText, editForm.alt_email_status === s && styles.chipTextActive]}>{s}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                        {(editForm.alt_email_status === 'alt-email' || editForm.alt_email_status === 'alt-both') && (
+                            <PaperInput label="Alt Email" value={editForm.alt_email} onChangeText={v => setEditForm(f => ({ ...f, alt_email: v }))} mode="outlined" keyboardType="email-address" autoCapitalize="none" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
+                        )}
+
+                        <Text style={styles.pickerLabel}>Resolution</Text>
+                        <View style={styles.chipRow}>
+                            {RESOLUTIONS.map(r => (
+                                <TouchableOpacity key={r} style={[styles.chip, editForm.resolution === r && styles.chipActive]} onPress={() => setEditForm(f => ({ ...f, resolution: r }))}>
+                                    <Text style={[styles.chipText, editForm.resolution === r && styles.chipTextActive]}>{RESOLUTION_LABELS[r]}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        <View style={{ flexDirection: 'row', gap: 10, marginTop: 12, marginBottom: 4 }}>
+                            <Button mode="outlined" onPress={() => setEditingEntry(null)} style={{ flex: 1 }}>Cancel</Button>
+                            <Button mode="contained" buttonColor="#059669" loading={updateMutation.isPending} onPress={() => editingEntry && updateMutation.mutate({ id: editingEntry.id, data: editForm })} style={{ flex: 1 }}>Save</Button>
+                        </View>
                     </ScrollView>
                 </Modal>
             </Portal>
