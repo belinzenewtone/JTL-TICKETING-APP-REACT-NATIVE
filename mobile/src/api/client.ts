@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 
 // Use EXPO_PUBLIC_API_URL env-var for dev/staging, fall back to production
 export const BASE_URL =
-    process.env.EXPO_PUBLIC_API_URL ?? 'https://ticketing-system-belinzenewtones-projects.vercel.app/api/mobile';
+    process.env.EXPO_PUBLIC_API_URL ?? 'https://belinzeticket.vercel.app/api/mobile';
 
 export const api = axios.create({
     baseURL: BASE_URL,
@@ -96,4 +96,28 @@ export const machinesApi = {
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 export const dashboardApi = {
     stats: () => api.get('/dashboard'),
+};
+
+// ── Entries (Email Dashboard) ─────────────────────────────────────────────────
+export const entriesApi = {
+    list: (params?: Record<string, string>) => api.get('/entries', { params }),
+    create: (data: unknown) => api.post('/entries', data),
+    update: (id: string, data: unknown) => api.patch(`/entries/${id}`, data),
+    delete: (id: string) => api.delete(`/entries/${id}`),
+};
+
+// ── Procurement ───────────────────────────────────────────────────────────────
+export const procurementApi = {
+    list: (params?: Record<string, string>) => api.get('/procurement', { params }),
+    create: (data: unknown) => api.post('/procurement', data),
+    get: (id: string) => api.get(`/procurement/${id}`),
+    update: (id: string, data: unknown) => api.patch(`/procurement/${id}`, data),
+    approve: (id: string, notes?: string) => api.patch(`/procurement/${id}`, { action: 'approve', signed_date: new Date().toISOString().split('T')[0], notes }),
+    reject: (id: string, reason: string) => api.patch(`/procurement/${id}`, { action: 'reject', reason }),
+    delete: (id: string) => api.delete(`/procurement/${id}`),
+};
+
+// ── Reports ───────────────────────────────────────────────────────────────────
+export const reportsApi = {
+    get: (range?: string) => api.get('/reports', { params: range ? { range } : {} }),
 };

@@ -16,6 +16,11 @@ import type { Ticket, TicketStatus, TicketPriority, CreateTicketInput } from '@/
 
 const STATUSES: TicketStatus[] = ['open', 'in-progress', 'resolved', 'closed'];
 const PRIORITIES: TicketPriority[] = ['critical', 'high', 'medium', 'low'];
+const CATEGORIES: TicketCategory[] = ['email', 'account-login', 'password-reset', 'hardware', 'software', 'network-vpn', 'other'];
+const CATEGORY_LABELS: Record<TicketCategory, string> = {
+    'email': 'Email', 'account-login': 'Account Login', 'password-reset': 'Password Reset',
+    'hardware': 'Hardware', 'software': 'Software', 'network-vpn': 'Network/VPN', 'other': 'Other',
+};
 
 export default function TicketsScreen() {
     const router = useRouter();
@@ -167,6 +172,17 @@ export default function TicketsScreen() {
                         <PaperInput label="Department" value={form.department ?? ''} onChangeText={(v: string) => setForm(f => ({ ...f, department: v }))} mode="outlined" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
                         <PaperInput label="Subject" value={form.subject ?? ''} onChangeText={(v: string) => setForm(f => ({ ...f, subject: v }))} mode="outlined" style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
                         <PaperInput label="Description" value={form.description ?? ''} onChangeText={(v: string) => setForm(f => ({ ...f, description: v }))} mode="outlined" multiline numberOfLines={3} style={styles.formInput} outlineColor="#d1d5db" activeOutlineColor="#059669" />
+
+                        <Text style={styles.filterLabel}>Category</Text>
+                        <View style={styles.chipRow}>
+                            {CATEGORIES.map(c => (
+                                <TouchableOpacity key={c} style={[styles.chip, form.category === c && styles.chipActive]} onPress={() => setForm(f => ({ ...f, category: c }))}>
+                                    <Text style={[styles.chipText, form.category === c && styles.chipTextActive]}>
+                                        {CATEGORY_LABELS[c]}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
 
                         <Text style={styles.filterLabel}>Priority</Text>
                         <View style={styles.chipRow}>

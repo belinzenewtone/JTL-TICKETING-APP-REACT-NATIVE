@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { LayoutDashboard, BookOpen, Monitor, ChevronRight } from 'lucide-react-native';
+import { LayoutDashboard, BookOpen, Monitor, ChevronRight, Mail, ShoppingCart, BarChart3 } from 'lucide-react-native';
 import { dashboardApi } from '@/api/client';
 
 interface StatCardProps { label: string; value: number; color: string }
@@ -32,16 +32,34 @@ export default function MoreScreen() {
             route: '/(admin)/more/dashboard' as const,
         },
         {
+            label: 'Email Dashboard',
+            subtitle: 'Email issue tracking',
+            icon: <Mail size={22} color="#0284c7" />,
+            route: '/(admin)/more/entries' as const,
+        },
+        {
+            label: 'Procurement',
+            subtitle: 'Requisitions & approvals',
+            icon: <ShoppingCart size={22} color="#b45309" />,
+            route: '/(admin)/more/procurement' as const,
+        },
+        {
+            label: 'Machine Requests',
+            subtitle: 'Hardware & equipment',
+            icon: <Monitor size={22} color="#be185d" />,
+            route: '/(admin)/more/machines' as const,
+        },
+        {
             label: 'Knowledge Base',
             subtitle: 'Articles & guides',
             icon: <BookOpen size={22} color="#7c3aed" />,
             route: '/(admin)/more/knowledge-base' as const,
         },
         {
-            label: 'Machine Requests',
-            subtitle: 'Hardware & equipment',
-            icon: <Monitor size={22} color="#0284c7" />,
-            route: '/(admin)/more/machines' as const,
+            label: 'Reports',
+            subtitle: 'Stats & summaries',
+            icon: <BarChart3 size={22} color="#059669" />,
+            route: '/(admin)/more/reports' as const,
         },
     ];
 
